@@ -62,7 +62,7 @@
   
   .stat-title {
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.6rem;
     color: #555555;
     margin-bottom: 0.75rem;
     letter-spacing: 0.05em;

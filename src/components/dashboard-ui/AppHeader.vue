@@ -17,6 +17,7 @@ const headerPadding = computed(() => (isCollapsed.value ? 'pl-4' : 'pl-68'))
 
 <template>
     <header :class="['fixed top-0 right-0 h-16 flex items-center bg-white', headerPadding]">
+      
       <div class="ml-auto"> 
         <button @click="openFileInput" class="upload-button">
           Upload New File

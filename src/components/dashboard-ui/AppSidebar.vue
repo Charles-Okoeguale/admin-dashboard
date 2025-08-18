@@ -26,11 +26,11 @@ const items = [
 </script>
 
 <template>
-  <div class="flex h-screen bg-gray-50">
-    <Sidebar class="w-64 bg-white shadow-lg flex flex-col">
+  <div class="flex h-screen bg-[red]">
+    <Sidebar class="bg-white shadow-lg flex flex-col">
       <SidebarHeader>
-        <div class="mt-10 mb-6 px-6 text-xl font-bold text-gray-800 border-b border-gray-200">
-          Admin Dashboard
+        <div class="mt-10 mb-6 px-6 text-xl font-bold text-gray-800 border-gray-200">
+          Admin
         </div>
       </SidebarHeader>
 
@@ -60,10 +60,6 @@ const items = [
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      
-      <div class="px-6 py-4 border-t border-gray-200 text-sm text-gray-500">
-        &copy; 2025 Your Company
-      </div>
     </Sidebar>
   </div>
 </template>

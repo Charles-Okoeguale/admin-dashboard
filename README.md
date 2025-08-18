@@ -31,3 +31,14 @@ npm run dev
 ```sh
 npm run build
 ```
+
+
+Todos:
+1. Create rules and format for each row, create fake stat for empty fields
+2. Adjust limit of y axis 
+3. make sidebar collapsible
+4. create table section
+5. make responsive
+6. add search for chart
+7. add animation for live stats
+8. add light mode and dark mode
