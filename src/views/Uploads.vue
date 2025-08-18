@@ -17,6 +17,7 @@ const handleFileUpload = async (event: Event) => {
       try {
         const rows = await readXlsxFile(file)
         console.log('Excel file contents:', rows)
+        localStorage.setItem('fileUploaded', 'true')
         router.push('/dashboard')
       } catch (error) {
         console.error('Error reading Excel file:', error)
