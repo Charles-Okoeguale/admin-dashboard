@@ -1,5 +1,14 @@
 <template>
   <section class="section-two">
+
+    <div class="search-container">
+      <input
+        type="text"
+        v-model="searchQuery"
+        placeholder="Search metrics..."
+        class="search-input"
+      />
+    </div>
     
     <div v-if="error" class="error-state">
       <div class="error-message">
@@ -23,7 +32,7 @@
  
     <div v-else class="grid-container">
       <div 
-        v-for="(metric, index) in metricsWithData" 
+        v-for="(metric, index) in filteredMetrics" 
         :key="metric.metricName"
         :ref="el => setChartRef(el, index)"
         class="grid-item chart-container"
@@ -81,6 +90,7 @@ interface ExcelData {
 }
 
 const loading = ref(true)
+const searchQuery = ref('')
 const error = ref<string | null>(null)
 const metricsWithData = ref<MetricData[]>([])
 const visibleCharts = ref<boolean[]>([])
@@ -89,11 +99,19 @@ const observer = ref<IntersectionObserver | null>(null)
 const currencyFields = ["New MRR", "Current total MRR", "Current total ARR"]
 
 const chartDimensions = computed(() => {
- 
   return {
     width: 280,
     height: 320  
   }
+})
+
+const filteredMetrics = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim()
+  if (!query) return metricsWithData.value
+  
+  return metricsWithData.value.filter(metric => 
+    metric.metricName.toLowerCase().includes(query)
+  )
 })
 
 const setChartRef = (el: Element | ComponentPublicInstance | null, index: number) => {
@@ -232,6 +250,34 @@ onBeforeUnmount(() => {
 .section-two {
   width: 100%; 
   padding: 1rem;
+}
+
+.search-container {
+  max-width: 1200px;
+  margin: 0 auto 1rem;
+  padding: 0 1rem;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 2em;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #42b883;
+  box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.1);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
 }
 
 .grid-container {
