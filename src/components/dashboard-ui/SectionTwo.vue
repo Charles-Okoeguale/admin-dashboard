@@ -1,13 +1,16 @@
 <template>
   <section class="section-two">
-
     <div class="search-container">
       <input
         type="text"
         v-model="searchQuery"
         placeholder="Search metrics..."
         class="search-input"
+        @input="onSearchInput"
       />
+      <div v-if="isSearching && searchQuery" class="search-info">
+        Showing {{ filteredMetrics.length }} of {{ metricsWithData.length }} metrics
+      </div>
     </div>
     
     <div v-if="error" class="error-state">
@@ -16,7 +19,6 @@
         <p>{{ error }}</p>
       </div>
     </div>
-
 
     <div v-else-if="loading" class="grid-container">
       <div v-for="n in 8" :key="`skeleton-${n}`" class="grid-item skeleton-item">
@@ -29,16 +31,17 @@
       </div>
     </div>
 
-    <div v-else-if="!hasFilteredMetrics" class="error-state">
+    <div v-else-if="isSearching && !hasFilteredMetrics" class="error-state">
       <div class="error-message">
         <h3>No Metrics Found</h3>
         <p>No metrics match your search for "{{ searchQuery }}"</p>
+        <button @click="clearSearch" class="clear-search-btn">Clear Search</button>
       </div>
     </div>
 
     <div v-else class="grid-container">
       <div 
-        v-for="(metric, index) in filteredMetrics" 
+        v-for="(metric, index) in displayMetrics" 
         :key="metric.metricName"
         :ref="el => setChartRef(el, index)"
         class="grid-item chart-container"
@@ -95,15 +98,19 @@ interface ExcelData {
   metrics: MetricData[]
 }
 
+// Core data refs
 const loading = ref(true)
 const searchQuery = ref('')
 const error = ref<string | null>(null)
-const metricsWithData = ref<MetricData[]>([])
+const metricsWithData = ref<MetricData[]>([]) // Single source of truth
 const visibleCharts = ref<boolean[]>([])
 const chartRefs = ref<(Element | null)[]>([])
 const observer = ref<IntersectionObserver | null>(null)
+
+// Constants
 const currencyFields = ["New MRR", "Current total MRR", "Current total ARR"]
 
+// Computed properties
 const chartDimensions = computed(() => {
   return {
     width: 280,
@@ -111,12 +118,16 @@ const chartDimensions = computed(() => {
   }
 })
 
-// Update filteredMetrics computed property
+// Search state - determines if we're in search mode
+const isSearching = computed(() => {
+  return searchQuery.value.trim().length > 0
+})
+
+// Filtered metrics based on search query
 const filteredMetrics = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
+  
   if (!query) {
-    // Reset visibility states when search is cleared
-    visibleCharts.value = new Array(metricsWithData.value.length).fill(true)
     return metricsWithData.value
   }
   
@@ -125,12 +136,39 @@ const filteredMetrics = computed(() => {
   )
 })
 
-const hasFilteredMetrics = computed(() => {
-  return filteredMetrics.value.length > 0;
-});
+// Display metrics - what actually gets rendered
+const displayMetrics = computed(() => {
+  return isSearching.value ? filteredMetrics.value : metricsWithData.value
+})
 
+// Check if we have any metrics to display after filtering
+const hasFilteredMetrics = computed(() => {
+  return displayMetrics.value.length > 0
+})
+
+// Methods
 const setChartRef = (el: Element | ComponentPublicInstance | null, index: number) => {
-   chartRefs.value[index] = el instanceof Element ? el : null
+  chartRefs.value[index] = el instanceof Element ? el : null
+}
+
+const onSearchInput = () => {
+  // Reset visibility when search changes
+  resetVisibility()
+}
+
+const clearSearch = () => {
+  searchQuery.value = ''
+  resetVisibility()
+}
+
+const resetVisibility = () => {
+  // Reset all charts to be visible (or use intersection observer logic)
+  visibleCharts.value = new Array(displayMetrics.value.length).fill(true)
+  
+  nextTick(() => {
+    setupIntersectionObserver()
+    observeChartContainers()
+  })
 }
 
 function formatBenchmark(metric: any) {
@@ -150,18 +188,19 @@ function formatBenchmark(metric: any) {
   }
 }
 
-
 const setupIntersectionObserver = () => {
+  // Disconnect existing observer
+  if (observer.value) {
+    observer.value.disconnect()
+  }
+  
   observer.value = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const index = chartRefs.value.indexOf(entry.target)
-          if (index !== -1 && !visibleCharts.value[index]) {
-           
-            setTimeout(() => {
-              visibleCharts.value[index] = true
-            }, 100)
+          if (index !== -1) {
+            visibleCharts.value[index] = true
           }
         }
       })
@@ -176,6 +215,9 @@ const setupIntersectionObserver = () => {
 const observeChartContainers = async () => {
   await nextTick()
   
+  // Clear previous refs
+  chartRefs.value = chartRefs.value.slice(0, displayMetrics.value.length)
+  
   chartRefs.value.forEach((ref) => {
     if (ref && observer.value) {
       observer.value.observe(ref)
@@ -186,7 +228,7 @@ const observeChartContainers = async () => {
 const normalizeMonthly = (obj: Record<string, number | null>) =>
   Object.fromEntries(
     Object.entries(obj).map(([k, v]) => [k.trim(), v == null ? null : Number(v)])
-)
+  )
 
 const loadMetricsData = async () => {
   try {
@@ -202,8 +244,8 @@ const loadMetricsData = async () => {
     console.log('Structured Excel Data:', structuredData)
 
     const validMetrics = structuredData.metrics
-    .filter(m => m.hasData)
-    .map(m => ({ ...m, monthlyData: normalizeMonthly(m.monthlyData) }))
+      .filter(m => m.hasData)
+      .map(m => ({ ...m, monthlyData: normalizeMonthly(m.monthlyData) }))
     
     if (validMetrics.length === 0) {
       error.value = 'No metrics with data found in the uploaded file'
@@ -211,7 +253,7 @@ const loadMetricsData = async () => {
       return
     }
 
-    const processed = await validMetrics.map(metric => {
+    const processed = validMetrics.map(metric => {
       const values = Object.values(metric.monthlyData).filter(v => v !== null) as number[]
 
       let rowType: 'currency' | 'percentage' | 'count'
@@ -231,9 +273,12 @@ const loadMetricsData = async () => {
     })
     
     console.log('Valid Metrics:', processed)
+    
+    // Set the single source of truth
     metricsWithData.value = processed
-    // Initialize all charts as visible instead of false
-    visibleCharts.value = new Array(validMetrics.length).fill(true)
+    
+    // Initialize visibility for all metrics
+    visibleCharts.value = new Array(processed.length).fill(true)
     
     loading.value = false
  
@@ -249,23 +294,23 @@ const loadMetricsData = async () => {
   }
 }
 
-// Add watcher for search query
-watch(searchQuery, (newQuery) => {
-  if (!newQuery) {
-    // Reset all charts to visible when search is cleared
-    nextTick(() => {
-      visibleCharts.value = new Array(metricsWithData.value.length).fill(true)
-    })
-  } else {
-    // Reset visibility for filtered charts
-    visibleCharts.value = new Array(metricsWithData.value.length).fill(false)
-    // Re-observe charts after filter
-    nextTick(() => {
-      observeChartContainers()
-    })
-  }
+// Watchers
+watch(displayMetrics, () => {
+  // When display metrics change, update visibility array
+  visibleCharts.value = new Array(displayMetrics.value.length).fill(true)
+  
+  nextTick(() => {
+    setupIntersectionObserver()
+    observeChartContainers()
+  })
+}, { immediate: false })
+
+watch(searchQuery, (newQuery, oldQuery) => {
+  // Log search state changes for debugging
+  console.log('Search query changed:', { newQuery, oldQuery, isSearching: isSearching.value })
 })
 
+// Lifecycle hooks
 onMounted(() => {
   setTimeout(() => {
     loadMetricsData()
@@ -298,7 +343,7 @@ onBeforeUnmount(() => {
   font-size: 0.875rem;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  margin-bottom: 2em;
+  margin-bottom: 0.5rem;
   background-color: white;
   transition: all 0.2s ease;
 }
@@ -311,6 +356,28 @@ onBeforeUnmount(() => {
 
 .search-input::placeholder {
   color: #9ca3af;
+}
+
+.search-info {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.clear-search-btn {
+  background-color: #42b883;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.clear-search-btn:hover {
+  background-color: #369870;
 }
 
 .grid-container {

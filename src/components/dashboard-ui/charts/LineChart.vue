@@ -11,6 +11,7 @@
               :width="chartWidth" 
               :height="chartHeight"
               :margin="chartMargin"
+              :yDomain = "[0, niceMax]"
             >
             <VisLine 
                 :x="(d: any, i: any) => i"  
@@ -28,8 +29,7 @@
             <VisAxis 
                 type="y" 
                 :tickFormat="formatYAxisValue"
-                :domain="[0, niceMax]"
-                :numTicks="tickCount"
+                :tickValues="yTickValues"
             />
             <VisScatter
                 :x="(d: any, i: any) => i" 
@@ -67,7 +67,6 @@ const props = defineProps<{
 
 const unovisWrapper = ref<HTMLElement | null>(null)
 const internalChartWidth = ref(0)
-const tickCount = 5
 const maxValue = computed(() => Math.max(...chartData.value.map(d => d.value)))
 const chartHeight = computed(() => props.chartHeight || 100)
 const chartMargin = computed(() => ({
@@ -77,19 +76,55 @@ const chartMargin = computed(() => ({
   left: 12
 }))
 
+const tickCount = computed(() => {
+  const range = niceMax.value;
+  if (range < 10) {
+    return Math.min(range + 1, 5);
+  }
+  if (range < 100) {
+    return 5;
+  }
+  if (range < 1000) {
+    return 6;
+  }
+  if (range < 2000) { 
+    return 5;
+  }
+  return 6;
+});
 
 
 const niceMax = computed(() => {
+  console.log(maxValue.value, 'maxValue');
   const max = maxValue.value;
+  if (max === 0) return 10;
+  
   const magnitude = Math.pow(10, Math.floor(Math.log10(max)));
-  const multiplier = Math.ceil(max / magnitude);
-  return multiplier * magnitude * 1.2;
-})
-
+  const normalizedMax = max / magnitude;
+  let multiplier;
+  
+  
+  if (normalizedMax <= 1) multiplier = 1;
+  else if (normalizedMax <= 2) multiplier = 2;
+  else if (normalizedMax <= 5) multiplier = 5;
+  else if (normalizedMax <= 10) multiplier = 10;
+  else multiplier = 20; 
+  
+  const result = multiplier * magnitude;
+  return Math.max(result, max * 1.2);
+});
 
 const chartWidth = computed(() => {
   if (!unovisWrapper.value) return 600;
   return unovisWrapper.value.clientWidth;
+});
+
+const yTickValues = computed(() => {
+  const max = niceMax.value;
+  const count = tickCount.value; 
+  const step = max / (count - 1);
+  
+  return Array.from({ length: count }, (_, i) => i * step);
 });
 
 onMounted(() => {
@@ -107,6 +142,16 @@ onMounted(() => {
   if (unovisWrapper.value) {
     resizeObserver.observe(unovisWrapper.value);
   }
+
+
+  console.log({
+    maxValue: maxValue.value,
+    metric: props.metric.metricName,
+    niceMax: niceMax.value,
+    tickCount: tickCount.value,
+    yTickValues: yTickValues.value,
+  })
+
 
   onUnmounted(() => {
     if (resizeObserver && unovisWrapper.value) {
