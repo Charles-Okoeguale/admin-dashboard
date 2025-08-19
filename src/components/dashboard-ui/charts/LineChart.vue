@@ -86,32 +86,34 @@ const niceMax = computed(() => {
   return multiplier * magnitude * 1.2;
 })
 
-const chartWidth = ref(600) 
+
+const chartWidth = computed(() => {
+  if (!unovisWrapper.value) return 600;
+  return unovisWrapper.value.clientWidth;
+});
 
 onMounted(() => {
   const updateWidth = () => {
     if (unovisWrapper.value) {
-      internalChartWidth.value = unovisWrapper.value.clientWidth
+      internalChartWidth.value = unovisWrapper.value.clientWidth;
     }
   }
-  updateWidth()
+  updateWidth();
 
+  const resizeObserver = new ResizeObserver(() => {
+    updateWidth();
+  });
 
-  let resizeObserver = new ResizeObserver(() => {
-    updateWidth()
-  })
   if (unovisWrapper.value) {
-    resizeObserver.observe(unovisWrapper.value)
+    resizeObserver.observe(unovisWrapper.value);
   }
-
-  console.log("chartData on mount:", chartData.value)
 
   onUnmounted(() => {
     if (resizeObserver && unovisWrapper.value) {
-      resizeObserver.unobserve(unovisWrapper.value)
+      resizeObserver.unobserve(unovisWrapper.value);
     }
-    resizeObserver.disconnect()
-  })
+    resizeObserver.disconnect();
+  });
 })
 
 const chartData = computed(() => { 
@@ -180,7 +182,8 @@ const triggers = {
   transition: box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
-  height: 520px;
+  height: auto; 
+  min-height: 320px; 
   user-select: none;
 }
 
@@ -231,6 +234,36 @@ const triggers = {
   justify-content: stretch; 
   justify-content: center;
   min-height: 200px;
+  padding: 1rem;
+}
+
+@media (max-width: 640px) {
+  .metric-chart-card {
+    min-height: 250px;
+  }
+  
+  .chart-container {
+    padding: 0.5rem;
+    min-height: 150px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .metric-chart-card {
+    min-height: 280px;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .metric-chart-card {
+    min-height: 320px;
+  }
+}
+
+@media (min-width: 1441px) {
+  .metric-chart-card {
+    min-height: 360px;
+  }
 }
 
 .no-data-message {
@@ -267,6 +300,7 @@ const triggers = {
  .unovis-wrapper {
     width: 100%;
     height: 100%;
+    position: relative;
  }
 
 :root {

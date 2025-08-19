@@ -157,6 +157,26 @@ onMounted(() => {
   background: linear-gradient(to bottom right, #f9fafb, #eef2f7);
 }
 
+/* Mobile screens */
+@media (max-width: 640px) {
+  .dashboard-main {
+    padding: 12px 8px;
+    margin-top: 56px;
+  }
+
+  .upload-card {
+    padding: 1.5rem 1rem;
+    margin: 0 8px;
+  }
+}
+
+/* Tablet screens */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .dashboard-main {
+    padding: 16px 12px;
+  }
+}
+
 .upload-prompt {
   display: flex;
   justify-content: center;

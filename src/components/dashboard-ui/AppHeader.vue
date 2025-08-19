@@ -13,16 +13,17 @@
 .app-header {
   position: fixed;
   top: 0;
-  right: 0;
+  left: 0;
   width: 100%;
   height: 64px;
   display: flex;
   align-items: center;
-  padding: 0 1rem;
+  padding: 0 2rem;
   background-color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   z-index: 100;
 }
+
 .dashboard-title {
 font-size: 1.25rem;
 font-weight: 900;
@@ -30,4 +31,14 @@ color: black;
 margin-left: 0rem;
 }
 
+@media (max-width: 640px) {
+  .app-header {
+    padding: 0 1rem;
+    height: 56px;
+  }
+
+  .dashboard-title {
+    font-size: 1rem;
+  }
+}
 </style>

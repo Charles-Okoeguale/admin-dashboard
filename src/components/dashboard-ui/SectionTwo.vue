@@ -281,11 +281,50 @@ onBeforeUnmount(() => {
 }
 
 .grid-container {
-  display: grid; 
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: grid;
   gap: 1rem;
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    padding: 0.5rem;
+  }
+
+  .search-container {
+    padding: 0.5rem;
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Laptop */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 1200px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1441px) {
+  .grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1600px;
+  }
 }
 
 @media (min-width: 1024px) {

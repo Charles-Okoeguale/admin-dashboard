@@ -85,10 +85,12 @@ onBeforeUnmount(() => {
 }
 
 .stats-section {
-  display: flex; 
-  justify-content: space-between; 
-  width: 100%; 
-  padding: 1rem; 
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem;
+  gap: 1rem;
 }
 
 .stats-section > * {
@@ -105,5 +107,31 @@ onBeforeUnmount(() => {
   width: 100%; 
   padding: 1rem; 
   text-align: center;
+}
+
+/* Mobile screens */
+@media (max-width: 640px) {
+  .stats-section {
+    flex-direction: column;
+    padding: 0.25rem;
+    gap: 0.5rem;
+  }
+
+  .stats-section > * {
+    margin: 0.25rem 0;
+    width: 100%;
+  }
+}
+
+/* Tablet screens */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .stats-section {
+    padding: 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .stats-section > * {
+    margin: 0.25rem;
+  }
 }
 </style>

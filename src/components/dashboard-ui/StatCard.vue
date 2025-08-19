@@ -66,6 +66,8 @@ const trendClass = computed(() => ({
   justify-content: center;
   min-width: 140px;
   user-select: none;
+  width: 100%;
+  min-height: 120px;
 }
 
 .stat-card:hover {
@@ -129,5 +131,15 @@ const trendClass = computed(() => ({
 @keyframes bounce-down {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(4px); }
+}
+
+@media (max-width: 640px) {
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+  }
 }
 </style>

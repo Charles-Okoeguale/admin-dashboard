@@ -36,4 +36,4 @@ npm run build
 Todos:
 Adjust limit of y axis - pending
 make responsive -
-uadd light mode and dark mode
+add light mode and dark mode
