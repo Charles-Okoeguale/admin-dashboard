@@ -29,7 +29,13 @@
       </div>
     </div>
 
- 
+    <div v-else-if="!hasFilteredMetrics" class="error-state">
+      <div class="error-message">
+        <h3>No Metrics Found</h3>
+        <p>No metrics match your search for "{{ searchQuery }}"</p>
+      </div>
+    </div>
+
     <div v-else class="grid-container">
       <div 
         v-for="(metric, index) in filteredMetrics" 
@@ -69,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed, nextTick, type ComponentPublicInstance } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch, type ComponentPublicInstance } from 'vue'
 import LineChart from './charts/LineChart.vue'
 
 interface MetricData {
@@ -105,14 +111,23 @@ const chartDimensions = computed(() => {
   }
 })
 
+// Update filteredMetrics computed property
 const filteredMetrics = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
-  if (!query) return metricsWithData.value
+  if (!query) {
+    // Reset visibility states when search is cleared
+    visibleCharts.value = new Array(metricsWithData.value.length).fill(true)
+    return metricsWithData.value
+  }
   
   return metricsWithData.value.filter(metric => 
     metric.metricName.toLowerCase().includes(query)
   )
 })
+
+const hasFilteredMetrics = computed(() => {
+  return filteredMetrics.value.length > 0;
+});
 
 const setChartRef = (el: Element | ComponentPublicInstance | null, index: number) => {
    chartRefs.value[index] = el instanceof Element ? el : null
@@ -217,7 +232,8 @@ const loadMetricsData = async () => {
     
     console.log('Valid Metrics:', processed)
     metricsWithData.value = processed
-    visibleCharts.value = new Array(validMetrics.length).fill(false)
+    // Initialize all charts as visible instead of false
+    visibleCharts.value = new Array(validMetrics.length).fill(true)
     
     loading.value = false
  
@@ -232,6 +248,23 @@ const loadMetricsData = async () => {
     loading.value = false
   }
 }
+
+// Add watcher for search query
+watch(searchQuery, (newQuery) => {
+  if (!newQuery) {
+    // Reset all charts to visible when search is cleared
+    nextTick(() => {
+      visibleCharts.value = new Array(metricsWithData.value.length).fill(true)
+    })
+  } else {
+    // Reset visibility for filtered charts
+    visibleCharts.value = new Array(metricsWithData.value.length).fill(false)
+    // Re-observe charts after filter
+    nextTick(() => {
+      observeChartContainers()
+    })
+  }
+})
 
 onMounted(() => {
   setTimeout(() => {

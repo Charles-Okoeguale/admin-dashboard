@@ -31,9 +31,3 @@ npm run dev
 ```sh
 npm run build
 ```
-
-
-Todos:
-Adjust limit of y axis - pending
-make responsive -
-add light mode and dark mode
