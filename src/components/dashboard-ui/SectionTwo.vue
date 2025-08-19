@@ -98,19 +98,19 @@ interface ExcelData {
   metrics: MetricData[]
 }
 
-// Core data refs
+
 const loading = ref(true)
 const searchQuery = ref('')
 const error = ref<string | null>(null)
-const metricsWithData = ref<MetricData[]>([]) // Single source of truth
+const metricsWithData = ref<MetricData[]>([]) 
 const visibleCharts = ref<boolean[]>([])
 const chartRefs = ref<(Element | null)[]>([])
 const observer = ref<IntersectionObserver | null>(null)
 
-// Constants
+
 const currencyFields = ["New MRR", "Current total MRR", "Current total ARR"]
 
-// Computed properties
+
 const chartDimensions = computed(() => {
   return {
     width: 280,
@@ -118,12 +118,12 @@ const chartDimensions = computed(() => {
   }
 })
 
-// Search state - determines if we're in search mode
+
 const isSearching = computed(() => {
   return searchQuery.value.trim().length > 0
 })
 
-// Filtered metrics based on search query
+
 const filteredMetrics = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
   
@@ -136,23 +136,23 @@ const filteredMetrics = computed(() => {
   )
 })
 
-// Display metrics - what actually gets rendered
+
 const displayMetrics = computed(() => {
   return isSearching.value ? filteredMetrics.value : metricsWithData.value
 })
 
-// Check if we have any metrics to display after filtering
+
 const hasFilteredMetrics = computed(() => {
   return displayMetrics.value.length > 0
 })
 
-// Methods
+
 const setChartRef = (el: Element | ComponentPublicInstance | null, index: number) => {
   chartRefs.value[index] = el instanceof Element ? el : null
 }
 
 const onSearchInput = () => {
-  // Reset visibility when search changes
+
   resetVisibility()
 }
 
@@ -162,7 +162,7 @@ const clearSearch = () => {
 }
 
 const resetVisibility = () => {
-  // Reset all charts to be visible (or use intersection observer logic)
+
   visibleCharts.value = new Array(displayMetrics.value.length).fill(true)
   
   nextTick(() => {
@@ -189,7 +189,6 @@ function formatBenchmark(metric: any) {
 }
 
 const setupIntersectionObserver = () => {
-  // Disconnect existing observer
   if (observer.value) {
     observer.value.disconnect()
   }
@@ -215,7 +214,6 @@ const setupIntersectionObserver = () => {
 const observeChartContainers = async () => {
   await nextTick()
   
-  // Clear previous refs
   chartRefs.value = chartRefs.value.slice(0, displayMetrics.value.length)
   
   chartRefs.value.forEach((ref) => {
@@ -274,10 +272,10 @@ const loadMetricsData = async () => {
     
     console.log('Valid Metrics:', processed)
     
-    // Set the single source of truth
+
     metricsWithData.value = processed
     
-    // Initialize visibility for all metrics
+
     visibleCharts.value = new Array(processed.length).fill(true)
     
     loading.value = false
@@ -294,9 +292,8 @@ const loadMetricsData = async () => {
   }
 }
 
-// Watchers
+
 watch(displayMetrics, () => {
-  // When display metrics change, update visibility array
   visibleCharts.value = new Array(displayMetrics.value.length).fill(true)
   
   nextTick(() => {
@@ -306,11 +303,11 @@ watch(displayMetrics, () => {
 }, { immediate: false })
 
 watch(searchQuery, (newQuery, oldQuery) => {
-  // Log search state changes for debugging
+
   console.log('Search query changed:', { newQuery, oldQuery, isSearching: isSearching.value })
 })
 
-// Lifecycle hooks
+
 onMounted(() => {
   setTimeout(() => {
     loadMetricsData()
@@ -404,14 +401,14 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Tablet */
+
 @media (min-width: 641px) and (max-width: 1024px) {
   .grid-container {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* Laptop */
+
 @media (min-width: 1025px) and (max-width: 1440px) {
   .grid-container {
     grid-template-columns: repeat(2, 1fr);
@@ -419,7 +416,7 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Desktop */
+
 @media (min-width: 1441px) {
   .grid-container {
     grid-template-columns: repeat(3, 1fr);
@@ -512,7 +509,7 @@ onBeforeUnmount(() => {
   font-size: 0.875rem;
 }
 
-/* Skeleton Loading States */
+
 .skeleton-item {
   background-color: #ffffff;
   border-radius: 12px;
@@ -578,7 +575,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Smooth transitions */
 .grid-item {
   transition: all 0.3s ease;
 }

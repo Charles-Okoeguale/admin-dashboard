@@ -28,7 +28,7 @@
             />
             <VisAxis 
                 type="y" 
-                :tickFormat="formatYAxisValue"
+                :tickFormat="getYAxisFormatter(metric.rowType)"
                 :tickValues="yTickValues"
             />
             <VisScatter
@@ -67,6 +67,8 @@ const props = defineProps<{
 
 const unovisWrapper = ref<HTMLElement | null>(null)
 const internalChartWidth = ref(0)
+const containerWidth = ref(0)
+const resizeObserver = ref<ResizeObserver | null>(null)
 const maxValue = computed(() => Math.max(...chartData.value.map(d => d.value)))
 const chartHeight = computed(() => props.chartHeight || 100)
 const chartMargin = computed(() => ({
@@ -115,7 +117,7 @@ const niceMax = computed(() => {
 });
 
 const chartWidth = computed(() => {
-  if (!unovisWrapper.value) return 600;
+  if (!unovisWrapper.value) return containerWidth.value || 600;
   return unovisWrapper.value.clientWidth;
 });
 
@@ -127,39 +129,45 @@ const yTickValues = computed(() => {
   return Array.from({ length: count }, (_, i) => i * step);
 });
 
-onMounted(() => {
-  const updateWidth = () => {
-    if (unovisWrapper.value) {
-      internalChartWidth.value = unovisWrapper.value.clientWidth;
-    }
+const handleResize = () => {
+  if (unovisWrapper.value) {
+    containerWidth.value = unovisWrapper.value.clientWidth;
+    internalChartWidth.value = containerWidth.value;
   }
-  updateWidth();
+};
 
-  const resizeObserver = new ResizeObserver(() => {
-    updateWidth();
+onMounted(() => {
+  // Initial size
+  handleResize();
+
+  // ResizeObserver for container changes
+  resizeObserver.value = new ResizeObserver(() => {
+    handleResize();
   });
 
   if (unovisWrapper.value) {
-    resizeObserver.observe(unovisWrapper.value);
+    resizeObserver.value.observe(unovisWrapper.value);
   }
 
-
-  console.log({
-    maxValue: maxValue.value,
-    metric: props.metric.metricName,
-    niceMax: niceMax.value,
-    tickCount: tickCount.value,
-    yTickValues: yTickValues.value,
-  })
+  // Window resize listener
+  window.addEventListener('resize', handleResize);
+});
 
 
-  onUnmounted(() => {
-    if (resizeObserver && unovisWrapper.value) {
-      resizeObserver.unobserve(unovisWrapper.value);
-    }
-    resizeObserver.disconnect();
-  });
-})
+onUnmounted(() => {
+  // Clean up resize observer
+  if (resizeObserver.value && unovisWrapper.value) {
+    resizeObserver.value.unobserve(unovisWrapper.value);
+    resizeObserver.value.disconnect();
+  }
+  
+  // Remove window resize listener
+  window.removeEventListener('resize', handleResize);
+});
+
+const getYAxisFormatter = (rowType: any) => {
+  return (value: number) => formatYAxisValue(value, rowType)
+}
 
 const chartData = computed(() => { 
   if (!props.metric.hasData) return []
@@ -194,16 +202,29 @@ const chartData = computed(() => {
   return cleanData
 })
 
-const formatYAxisValue = (value: number): string => {
+
+const formatYAxisValue = (value: number, rowType?: 'currency' | 'percentage' | 'count'): string => {
   const numValue = Number(value)
+  let formattedValue: string
+  
   if (numValue >= 1000000) {
-    return `${(numValue / 1000000).toFixed(1)}M`
+    formattedValue = `${(numValue / 1000000).toFixed(1)}M`
   } else if (numValue >= 1000) {
-    return `${(numValue / 1000).toFixed(1)}K`
+    formattedValue = `${(numValue / 1000).toFixed(1)}K`
   } else if (numValue < 1 && numValue > 0) {
-    return numValue.toFixed(2)
+    formattedValue = numValue.toFixed(2)
+  } else {
+    formattedValue = numValue.toFixed(1)
   }
-  return numValue.toString()
+
+  switch (rowType) {
+    case 'currency':
+      return `£${formattedValue}`
+    case 'percentage':
+      return `${formattedValue}%`
+    default:
+      return formattedValue
+  }
 }
 
 const triggers = {

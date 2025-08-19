@@ -18,12 +18,14 @@
       />
     </section>
     <div class="gap"></div> 
-    <SectionTwo/>
+    <SectionTwo 
+      :key="componentKey" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue';
 import StatCard from '@/components/dashboard-ui/StatCard.vue';
 import SectionTwo from '@/components/dashboard-ui/SectionTwo.vue';
 
@@ -75,6 +77,35 @@ onMounted(() => {
 onBeforeUnmount(() => {
   intervals.forEach(clearInterval);
 });
+
+// Add a key to force remount
+const componentKey = ref(0)
+
+// Add resize handler
+const handleResize = () => {
+  // Increment key to force remount
+  componentKey.value++
+}
+
+// Add debounce to prevent excessive remounts
+const debounce = (fn: Function, ms = 300) => {
+  let timeoutId: ReturnType<typeof setTimeout>
+  return function (this: any, ...args: any[]) {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), ms)
+  }
+}
+
+// Create debounced resize handler
+const debouncedResize = debounce(handleResize)
+
+onMounted(() => {
+  window.addEventListener('resize', debouncedResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', debouncedResize)
+})
 </script>
 
 <style scoped>
