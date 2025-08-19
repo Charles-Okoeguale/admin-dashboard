@@ -152,7 +152,6 @@ const setChartRef = (el: Element | ComponentPublicInstance | null, index: number
 }
 
 const onSearchInput = () => {
-
   resetVisibility()
 }
 

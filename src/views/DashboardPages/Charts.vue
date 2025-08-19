@@ -25,9 +25,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount, onUnmounted, computed } from 'vue';
 import StatCard from '@/components/dashboard-ui/StatCard.vue';
 import SectionTwo from '@/components/dashboard-ui/SectionTwo.vue';
+
+const debounce = (fn: Function, ms = 300) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return function (this: any, ...args: any[]) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), ms);
+  };
+};
 
 interface StatValue {
   current: number;
@@ -38,6 +46,7 @@ interface StatValue {
 const activeUsersLive = ref<StatValue>({ current: 100, previous: 100 });
 const activeUsers24Hours = ref<StatValue>({ current: 500, previous: 500 });
 const cardsCreated24Hours = ref<StatValue>({ current: 50, previous: 50 });
+const currentBreakpoint = ref<string>('')
 
 
 const updateLiveUsers = () => {
@@ -74,34 +83,36 @@ onMounted(() => {
   intervals.push(setInterval(resetCardsDaily, 24 * 60 * 60 * 1000));
 });
 
-onBeforeUnmount(() => {
-  intervals.forEach(clearInterval);
-});
 
-// Add a key to force remount
 const componentKey = ref(0)
 
-// Add resize handler
-const handleResize = () => {
-  // Increment key to force remount
-  componentKey.value++
+const getBreakpoint = () => {
+  const width = window.innerWidth
+  if (width <= 640) return 'mobile'
+  if (width <= 1024) return 'tablet'
+  if (width <= 1440) return 'laptop'
+  return 'desktop'
 }
 
-// Add debounce to prevent excessive remounts
-const debounce = (fn: Function, ms = 300) => {
-  let timeoutId: ReturnType<typeof setTimeout>
-  return function (this: any, ...args: any[]) {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => fn.apply(this, args), ms)
+const handleResize = () => {
+  const newBreakpoint = getBreakpoint()
+  if (newBreakpoint !== currentBreakpoint.value) {
+    currentBreakpoint.value = newBreakpoint
+    componentKey.value++
   }
 }
 
-// Create debounced resize handler
-const debouncedResize = debounce(handleResize)
+
+const debouncedResize = debounce(handleResize, 500);
 
 onMounted(() => {
+  currentBreakpoint.value = getBreakpoint()
   window.addEventListener('resize', debouncedResize)
 })
+
+onBeforeUnmount(() => {
+  intervals.forEach(clearInterval);
+});
 
 onUnmounted(() => {
   window.removeEventListener('resize', debouncedResize)
