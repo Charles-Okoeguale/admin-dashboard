@@ -95,9 +95,7 @@ const tickCount = computed(() => {
   return 6;
 });
 
-
 const niceMax = computed(() => {
-  console.log(maxValue.value, 'maxValue');
   const max = maxValue.value;
   if (max === 0) return 10;
   
@@ -105,15 +103,13 @@ const niceMax = computed(() => {
   const normalizedMax = max / magnitude;
   let multiplier;
   
-  
   if (normalizedMax <= 1) multiplier = 1;
   else if (normalizedMax <= 2) multiplier = 2;
   else if (normalizedMax <= 5) multiplier = 5;
   else if (normalizedMax <= 10) multiplier = 10;
-  else multiplier = 20; 
+  else multiplier = 20;
   
-  const result = multiplier * magnitude;
-  return Math.max(result, max * 1.2);
+  return multiplier * magnitude;
 });
 
 const chartWidth = computed(() => {
