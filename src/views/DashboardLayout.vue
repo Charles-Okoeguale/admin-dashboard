@@ -40,14 +40,13 @@ const handleFileUpload = async (event: Event) => {
 
     const rawData : any = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null })
 
-    const structuredData = processMarketingData(rawData)
-  
-    console.log('Processed Excel data:', structuredData)
-    
+    const structuredData = processMarketingData(rawData)    
     data.value = structuredData
   
     localStorage.setItem('fileUploaded', 'true')
     localStorage.setItem('excelData', JSON.stringify(structuredData))
+
+    hasFileUploaded.value = true
   } catch (err: any) {
     error.value = 'Error reading file: ' + err.message
     console.error('Error processing Excel file:', err)
@@ -57,7 +56,6 @@ const handleFileUpload = async (event: Event) => {
 }
 
 const processMarketingData = (rawData: any[][]) => {
-  console.log(rawData, 'Raw Excel data received')
   const headerRow = rawData[1] || []
   const months = headerRow.slice(2).filter(month => month)
 

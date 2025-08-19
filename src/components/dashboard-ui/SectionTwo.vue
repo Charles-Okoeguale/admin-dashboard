@@ -239,7 +239,6 @@ const loadMetricsData = async () => {
     }
 
     const structuredData: ExcelData = JSON.parse(excelDataString)
-    console.log('Structured Excel Data:', structuredData)
 
     const validMetrics = structuredData.metrics
       .filter(m => m.hasData)
@@ -270,7 +269,6 @@ const loadMetricsData = async () => {
       }
     })
     
-    console.log('Valid Metrics:', processed)
     
 
     metricsWithData.value = processed
@@ -303,8 +301,6 @@ watch(displayMetrics, () => {
 }, { immediate: false })
 
 watch(searchQuery, (newQuery, oldQuery) => {
-
-  console.log('Search query changed:', { newQuery, oldQuery, isSearching: isSearching.value })
 })
 
 
