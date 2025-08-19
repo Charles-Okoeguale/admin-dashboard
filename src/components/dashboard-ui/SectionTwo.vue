@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
 
 .search-container {
   max-width: 1200px;
-  margin: 0 auto 1rem;
+  margin: 0 auto 3rem;
   padding: 0 1rem;
 }
 
